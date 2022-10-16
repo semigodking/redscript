@@ -21,14 +21,7 @@ RESOLVEIP_BIN=/usr/bin/resolveip
 #iptables -t mangle -F REDSOCKS
 #
 #iptables -t mangle -A REDSOCKS -p udp -d 127.0.0.1 --dport 1054 -j TPROXY --on-port 10000 --tproxy-mark 0x01/0x01
-#iptables -t mangle -A REDSOCKS -p udp -d tracker.openbittorrent.com --dport 80 -j TPROXY --on-port 10000 --tproxy-mark 0x01/0x01
-#iptables -t mangle -A REDSOCKS -p udp -d tracker.pomf.se --dport 80 -j TPROXY --on-port 10000 --tproxy-mark 0x01/0x01
-#iptables -t mangle -A REDSOCKS -p udp -d open.demonii.com --dport 1337 -j TPROXY --on-port 10000 --tproxy-mark 0x01/0x01
 #iptables -t mangle -A REDSOCKS -p udp --dport 6969 -j TPROXY --on-port 10000 --tproxy-mark 0x01/0x01
-#
-#iptables -t nat -I PREROUTING  -p udp -d open.demonii.com --dport 1337 -j REDIRECT --to-ports 20001
-#iptables -t nat -I PREROUTING  -p udp -d tracker.pomf.se --dport 80 -j REDIRECT --to-ports 20002
-#iptables -t nat -I PREROUTING  -p udp -d tracker.openbittorrent.com --dport 80 -j REDIRECT --to-ports 20003
 
 # Prepare ipsets
 set_names=$(ipset list -n)
@@ -113,6 +106,7 @@ for domain in $nslist ;
 do
     case $domain in
     -*/[0-9]*)
+       domain=$(echo $domain | cut -d - -f 2)
        ipset add redsocks_whitelist_net $domain
        ;;
     -*)
@@ -136,6 +130,11 @@ do
     esac
 done
 
+# UDP TPROXY
+iptables -t mangle -A REDSOCKS -p udp -m set --match-set redsocks_whitelist dst -j RETURN
+iptables -t mangle -A REDSOCKS -p udp --sport 51413 -j RETURN
+iptables -t mangle -A REDSOCKS -p udp --dport 80 -j TPROXY --on-port 1082 --tproxy-mark 0x01/0x01
+iptables -t mangle -A REDSOCKS -p udp --dport 443 -j TPROXY --on-port 1082 --tproxy-mark 0x01/0x01
 
 # TODO: Lines below are used by OpenWRT based bypass gateway.
 # MSS fix
