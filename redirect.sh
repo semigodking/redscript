@@ -72,7 +72,7 @@ iptables -t nat -A REDSOCKS -p tcp -m iprange --src-range 192.168.1.201-192.168.
 iptables -t nat -A REDSOCKS -p tcp -m set --match-set redsocks_whitelist dst -j RETURN
 iptables -t nat -A REDSOCKS -p tcp --sport 51413 -j RETURN
 # Redirect normal HTTP and HTTPS traffic
-iptables -t nat -A REDSOCKS -p tcp -m multiport --dports 21:1024,8080 -j REDIRECT --to-ports 1082
+iptables -t nat -A REDSOCKS -p tcp -m multiport --dports 21:1024,8080,5061,5223 -j REDIRECT --to-ports 1082
 #iptables -t nat -A REDSOCKS -p tcp --dport 80 -j REDIRECT --to-ports 1082
 #iptables -t nat -A REDSOCKS -p tcp --dport 443 -j REDIRECT --to-ports 1082
 #iptables -t nat -A REDSOCKS -p tcp --dport 8080 -j REDIRECT --to-ports 1082
@@ -133,6 +133,7 @@ done
 # UDP TPROXY
 iptables -t mangle -A REDSOCKS -p udp -m set --match-set redsocks_whitelist dst -j RETURN
 iptables -t mangle -A REDSOCKS -p udp --sport 51413 -j RETURN
+iptables -t mangle -A REDSOCKS -p udp -m multiport --dports 53:1024,3478,19302 -j TPROXY --on-port 1082 --tproxy-mark 0x01/0x01
 iptables -t mangle -A REDSOCKS -p udp --dport 80 -j TPROXY --on-port 1082 --tproxy-mark 0x01/0x01
 iptables -t mangle -A REDSOCKS -p udp --dport 443 -j TPROXY --on-port 1082 --tproxy-mark 0x01/0x01
 
